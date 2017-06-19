@@ -1,0 +1,11 @@
+---
+# Launch instances, runs some tasks
+# and then terminate them
+
+- hosts: localhost
+  connection: local
+  gather_facts: False
+  roles:
+    - aws-network-create
+  vars:
+    - region: us-west-2

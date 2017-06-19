@@ -1,0 +1,157 @@
+---
+
+- name: Do an VPC with the given name alredy exist
+  ec2_vpc_net_facts:
+    region: "{{region}}"
+    filters:
+      "tag:Name": "{{application_name}}-vpc"
+  register: vpc_test
+
+- name: Set informatiom from existing VPC
+  set_fact:
+    vpc: "{{vpc_test.vpcs[0]}}"
+  when: vpc_test.vpcs != []
+
+- name: Ensure that the VPC exits
+  ec2_vpc_net:
+    name: "{{application_name}}-vpc"
+    cidr_block: "{{vpc_cidr_block}}"
+    region: "{{region}}"
+    tags:
+      module: ec2_vpc_net
+      CostCenter: SummerCamp
+      Name: "{{application_name}}-vpc"
+    tenancy: dedicated
+    multi_ok: no
+  register: vpc_result
+  when: vpc_test.vpcs == []
+
+- name: Set informatiom from created VPC
+  set_fact:
+    vpc: "{{vpc_result.vpc}}"
+  when: vpc_test.vpcs == []
+
+- name: debug the vpc
+  debug: msg={{vpc}}
+
+- name: Ensure that there is an igw present at the VPC
+  ec2_vpc_igw:
+    vpc_id: "{{vpc.id}}"
+    state: present
+    region: "{{region}}"
+  register: igw
+
+- name: Create public subnets
+  ec2_vpc_subnet:
+    state: present
+    region: "{{region}}"
+    vpc_id: "{{vpc.id}}"
+    az: "{{region}}{{item.az}}"
+    cidr: "{{item.cidir}}"
+    resource_tags:
+      Name: "{{application_name}}-nw-public-{{item.az}}"
+      CostCenter: "SummerCamp"
+      Networkkind: public
+      NAT: "{{item.nat}}"
+  with_items:
+    - {az: a, cidir: 10.0.1.0/24, nat: "yes" }
+    - {az: b, cidir: 10.0.2.0/24, nat: "no" }
+    - {az: c, cidir: 10.0.3.0/24, nat: "no" }
+
+- name: Create prviate application subnets
+  ec2_vpc_subnet:
+    state: present
+    region: "{{region}}"
+    vpc_id: "{{vpc.id}}"
+    az: "{{region}}{{item.az}}"
+    cidr: "{{item.cidir}}"
+    resource_tags:
+      Name: "{{application_name}}-nw-priv-app-{{item.az}}"
+      CostCenter: "SummerCamp"
+      Networkkind: private
+  with_items:
+    - {az: a, cidir: 10.0.11.0/24 }
+    - {az: b, cidir: 10.0.12.0/24 }
+    - {az: c, cidir: 10.0.13.0/24 }
+    
+- name: Create prviate DB subnets
+  ec2_vpc_subnet:
+    state: present
+    region: "{{region}}"
+    vpc_id: "{{vpc.id}}"
+    az: "{{region}}{{item.az}}"
+    cidr: "{{item.cidir}}"
+    resource_tags:
+      Name: "{{application_name}}-nw-priv-db-{{item.az}}"
+      CostCenter: "SummerCamp"
+      Networkkind: private
+  with_items:
+    - {az: a, cidir: 10.0.21.0/24 }
+    - {az: b, cidir: 10.0.22.0/24 }
+    - {az: c, cidir: 10.0.23.0/24 }
+
+# Basic creation example:
+- name: Set up public subnet route table
+  ec2_vpc_route_table:
+    vpc_id: "{{vpc.id}}"
+    region: "{{region}}"
+    tags:
+      Name: "{{application_name}}-public-rt"
+      Type: "custom"
+    subnets:
+      - "{{application_name}}-nw-public-a"
+      - "{{application_name}}-nw-public-b"
+      - "{{application_name}}-nw-public-c"
+    routes:
+      - dest: "{{vpc_cidr_block}}"
+        gateway_id: "local"
+      - dest: 0.0.0.0/0
+        gateway_id: "{{ igw.gateway_id }}"
+  register: public_route_table
+
+- name: receive the name of the public subnetwork to add the NAT Gatway
+  ec2_vpc_subnet_facts:
+    filters:
+      "tag:NAT": "yes"
+    region: "{{region}}"
+  register: public_subnet_nat
+
+- name: Create new nat gateway and allocate new EIP if a nat gateway does not yet exist in the subnet.
+  ec2_vpc_nat_gateway:
+    state: present
+    subnet_id: "{{public_subnet_nat.subnets.0.id}}"
+    wait: yes
+    region: "{{region}}"
+    if_exist_do_not_create: true
+  register: public_nat_gateway
+
+- name: debug the NAT
+  debug: msg={{public_nat_gateway}}
+
+
+- name: Set up private subnet route table
+  ec2_vpc_route_table:
+    vpc_id: "{{vpc.id}}"
+    region: "{{region}}"
+    tags:
+      Name: "{{application_name}}-private-rt"
+      Type: "custom"
+    subnets:
+      - "{{application_name}}-nw-priv-app-a"
+      - "{{application_name}}-nw-priv-app-b"
+      - "{{application_name}}-nw-priv-app-c"
+      - "{{application_name}}-nw-priv-db-a"
+      - "{{application_name}}-nw-priv-db-b"
+      - "{{application_name}}-nw-priv-db-c"
+    routes:
+      - dest: 0.0.0.0/0
+        gateway_id: "{{ public_nat_gateway.nat_gateway_id }}"
+      - dest: "{{vpc_cidr_block}}"
+        gateway_id: "local"
+  register: private_route_table
+
+
+- name: debug the RT
+  debug: msg={{private_route_table}}
+
+
