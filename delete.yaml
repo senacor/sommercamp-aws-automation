@@ -6,9 +6,9 @@
   connection: local
   gather_facts: False
   roles:
-    - aws-network-delete
-    - aws-security-delete
-    - aws-cluser-delete
     - aws-database-delete
+    - aws-cluser-delete
+    - aws-security-delete
+    - aws-network-delete
   vars:
     - region: us-west-2
