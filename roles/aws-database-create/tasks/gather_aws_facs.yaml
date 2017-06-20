@@ -1,0 +1,38 @@
+- name: gather the VPC information
+  ec2_vpc_net_facts:
+    region: "{{region}}"
+    filters:
+      "tag:Name": "{{application_name}}-vpc"
+  register: vpc_result
+
+- name: Set informatiom from existing VPC
+  set_fact:
+    vpc: "{{vpc_result.vpcs[0]}}"
+  when: vpc_result.vpcs != []
+
+- name: Gather subnet facts for all subnets in the VPC
+  ec2_vpc_subnet_facts:
+    filters:
+      vpc-id: "{{vpc.id}}"
+      "tag:Usage": ESC
+    region: "{{region}}"
+  register: subnetworks
+  when: vpc is defined
+
+- name: Set informatiom from existing VPC
+  set_fact:
+    ec2_asg_vpc_subnets: "{{ subnetworks.subnets|map(attribute='id')|list() }}"
+  when: subnetworks is defined
+
+
+- ec2_group_facts:
+    region: "{{region}}"
+    filters:
+      group-name:
+        - "{{application_name}}-sg-db"
+  register: security_group_result
+
+- name: Set informatiom from existing VPC
+  set_fact:
+    security_group_id: "{{ security_group_result.security_groups.0.group_id }}"
+  when: subnetworks is defined

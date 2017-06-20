@@ -9,5 +9,6 @@
     - aws-network-create
     - aws-security-create
     - aws-cluster-create
+    - aws-database-create
   vars:
     - region: us-west-2

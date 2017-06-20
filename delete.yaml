@@ -9,5 +9,6 @@
     - aws-network-delete
     - aws-security-delete
     - aws-cluser-delete
+    - aws-database-delete
   vars:
     - region: us-west-2

@@ -1,0 +1,16 @@
+---
+
+- name: Delete the RDB service
+  rds:
+    command: delete
+    region: "{{region}}"
+    instance_name: "{{ application_name }}-rdb"
+    wait: yes
+
+
+# Add or change a subnet group
+- name: Delete the RDB Subnetwork group
+  rds_subnet_group:
+    state: absent
+    name: "{{ application_name }}_rdb_sng"
+    region: "{{region}}"

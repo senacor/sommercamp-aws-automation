@@ -1,0 +1,29 @@
+---
+# Check pre-requisites
+- include: gather_aws_facs.yaml
+
+
+# Add or change a subnet group
+- rds_subnet_group:
+    state: present
+    name: "{{ application_name }}_rdb_sng"
+    description: "Subnetgroup for RDB of {{ application_name }}"
+    subnets: "{{ec2_asg_vpc_subnets}}"
+    region: "{{region}}"
+  register: subnetgroup
+
+- rds:
+    command: create
+    region: "{{region}}"
+    instance_name: "{{ application_name }}-rdb"
+    db_engine: MySQL
+    size: 10
+    instance_type: db.t2.medium
+    username: PetClinicDB
+    password: PetClinicPassw0rd
+    vpc_security_groups: "{{security_group_id}}"
+    subnet: "{{ application_name }}_rdb_sng"
+    tags:
+      CostCenter: "SummerCamp"
+      Name: "{{ application_name }}_rdb"
+    wait: yes
