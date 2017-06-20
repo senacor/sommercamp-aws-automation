@@ -7,5 +7,7 @@
   gather_facts: False
   roles:
     - aws-network-delete
+    - aws-security-delete
+    - aws-cluser-delete
   vars:
     - region: us-west-2

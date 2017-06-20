@@ -7,5 +7,7 @@
   gather_facts: False
   roles:
     - aws-network-create
+    - aws-security-create
+    - aws-cluster-create
   vars:
     - region: us-west-2
