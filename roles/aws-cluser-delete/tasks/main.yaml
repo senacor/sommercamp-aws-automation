@@ -1,0 +1,21 @@
+---
+- name: "AWS | EC2 | Decomission the EC2 Auto Scaling Group"
+  ec2_asg:
+    region: "{{region}}"
+    name: "{{ application_name }}_asg"
+    state: "absent"
+    wait_for_instances: true
+
+# Decommision the EC2 Launch Configuration
+- name: "AWS | EC2 | Decomission the EC2 Launch Configuration"
+  ec2_lc:
+    region: "{{region}}"
+    name: "{{ application_name }}_lc"
+    state: "absent"
+
+# Decomission the ECS cluster
+- name: "AWS | ECS | Decommission the cluster"
+  ecs_cluster:
+    region: "{{region}}"
+    name: "{{ application_name }}_cluster"
+    state: "absent"

@@ -1,0 +1,59 @@
+---
+
+- name: Does an VPC with the given name alredy exist
+  ec2_vpc_net_facts:
+    region: "{{region}}"
+    filters:
+      "tag:Name": "{{application_name}}-vpc"
+  register: vpc_test
+
+- name: Set informatiom from existing VPC
+  set_fact:
+    vpc: "{{vpc_test.vpcs[0]}}"
+  when: vpc_test.vpcs != []
+
+- name: Ensure Loadbalancer Securitygroup is available
+  ec2_group:
+    name: "{{application_name}}-sg-elb"
+    description: an example EC2 group
+    vpc_id: "{{vpc.id}}"
+    region: "{{region}}"
+    rules:
+      - proto: tcp
+        from_port: 80
+        to_port: 80
+        cidr_ip: 0.0.0.0/0
+
+- name: Ensure ECS Securitygroup is available
+  ec2_group:
+    name: "{{application_name}}-sg-esc"
+    description: an example EC2 group
+    vpc_id: "{{vpc.id}}"
+    region: "{{region}}"
+    rules:
+      - proto: tcp
+        from_port: 22
+        to_port: 22
+        cidr_ip: 0.0.0.0/0
+      - proto: tcp
+        from_port: 31000
+        to_port: 61000
+        group_name: "{{application_name}}-sg-elb"
+      - proto: tcp
+        from_port: 31000
+        to_port: 61000
+        group_name: "{{application_name}}-sg-esc"
+
+- name: Ensure Database Securitygroup is available
+  ec2_group:
+    name: "{{application_name}}-sg-db"
+    description: an example EC2 group
+    vpc_id: "{{vpc.id}}"
+    region: "{{region}}"
+    rules:
+      - proto: tcp
+        from_port: 3306
+        to_port: 3306
+        group_name: "{{application_name}}-sg-esc"
+
+

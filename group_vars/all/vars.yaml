@@ -1,4 +1,9 @@
 ---
 region: us-west-2
+
 application_name: aws-pedclinic
 vpc_cidr_block: 10.0.10.0/16
+
+#ec2_ami_id: "ami-022b9262"
+
+#key_name: test_rsa

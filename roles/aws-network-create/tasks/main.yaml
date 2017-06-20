@@ -1,6 +1,6 @@
 ---
 
-- name: Do an VPC with the given name alredy exist
+- name: Does an VPC with the given name alredy exist
   ec2_vpc_net_facts:
     region: "{{region}}"
     filters:
@@ -53,6 +53,7 @@
       CostCenter: "SummerCamp"
       Networkkind: public
       NAT: "{{item.nat}}"
+      Usage: ELB
   with_items:
     - {az: a, cidir: 10.0.1.0/24, nat: "yes" }
     - {az: b, cidir: 10.0.2.0/24, nat: "no" }
@@ -69,6 +70,7 @@
       Name: "{{application_name}}-nw-priv-app-{{item.az}}"
       CostCenter: "SummerCamp"
       Networkkind: private
+      Usage: ESC
   with_items:
     - {az: a, cidir: 10.0.11.0/24 }
     - {az: b, cidir: 10.0.12.0/24 }
@@ -85,6 +87,7 @@
       Name: "{{application_name}}-nw-priv-db-{{item.az}}"
       CostCenter: "SummerCamp"
       Networkkind: private
+      Usage: DB
   with_items:
     - {az: a, cidir: 10.0.21.0/24 }
     - {az: b, cidir: 10.0.22.0/24 }
