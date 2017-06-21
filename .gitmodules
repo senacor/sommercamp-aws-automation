@@ -1,0 +1,3 @@
+[submodule "amazon-ecs-java-microservices"]
+	path = amazon-ecs-java-microservices
+	url = git@github.com:awslabs/amazon-ecs-java-microservices.git
