@@ -1,5 +1,12 @@
 ---
 
+ecr_respositories:
+  -  spring-petclinic-rest-owner
+  -  spring-petclinic-rest-pet
+  -  spring-petclinic-rest-system
+  -  spring-petclinic-rest-vet
+  -  spring-petclinic-rest-visit
+
 ec2_security_groups:
   -  "{{application_name}}-sg-esc"
 

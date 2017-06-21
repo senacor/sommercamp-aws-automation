@@ -1,0 +1,26 @@
+---
+
+- name: Create ECR repositories
+  ecs_ecr:
+    name: "{{item}}"
+    region: "{{region}}"
+  with_items: "{{ecr_respositories}}"
+
+- name: Docker ECR login
+  shell: "$(aws ecr get-login --region {{region}})"
+  
+- name: Maven package
+  shell: "mvn package -Dmaven.test.skip=true"
+  args:
+    chdir: "{{mvn_base_path}}/{{item}}"
+    creates: "{{mvn_base_path}}/{{item}}/{{item}}*.jar"
+  with_items: "{{ecr_respositories}}"
+
+- name: Maven build docker and push to ECR
+  shell: "mvn docker:build -DpushImage -Dmaven.test.skip=true"
+  args:
+    chdir: "{{mvn_base_path}}/{{item}}"
+  environment:
+    docker_registry_host: "{{ecr_host}}"
+  with_items: "{{ecr_respositories}}"
+

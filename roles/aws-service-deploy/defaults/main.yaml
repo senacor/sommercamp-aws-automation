@@ -1,0 +1,12 @@
+---
+# define the petstore repositories
+ecr_respositories:
+  -  spring-petclinic-rest-owner
+  -  spring-petclinic-rest-pet
+  -  spring-petclinic-rest-system
+  -  spring-petclinic-rest-vet
+  -  spring-petclinic-rest-visit
+
+ecr_host: "{{accountid}}.dkr.ecr.{{region}}.amazonaws.com"
+
+mvn_base_path: amazon-ecs-java-microservices/2_ECS_Java_Spring_PetClinic_Microservices
