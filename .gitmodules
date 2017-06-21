@@ -1,3 +1,6 @@
 [submodule "amazon-ecs-java-microservices"]
 	path = amazon-ecs-java-microservices
 	url = git@github.com:awslabs/amazon-ecs-java-microservices.git
+[submodule "aws-automation-bash"]
+	path = aws-automation-bash
+	url = git@github.com:kochp/ansible-aws-bash.git
