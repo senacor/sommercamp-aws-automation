@@ -21,7 +21,7 @@
       module: ec2_vpc_net
       CostCenter: SummerCamp
       Name: "{{application_name}}-vpc"
-    tenancy: dedicated
+    tenancy: default
     multi_ok: no
   register: vpc_result
   when: vpc_test.vpcs == []
