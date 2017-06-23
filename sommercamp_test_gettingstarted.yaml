@@ -1,0 +1,39 @@
+---
+# Launch instances, runs some tasks
+# and then terminate them
+
+- hosts: localhost
+  connection: local
+  gather_facts: False
+  tasks:
+  - name: Ensure VPC for Sommercamp is available
+    ec2_vpc_net:
+      name: sommercamp_vpc_pkoch
+      cidr_block: 10.10.0.0/16
+      region: us-west-2
+      tags:
+        CostCenter: "SummerCamp"
+        Person: Philipp
+
+  #- debug: msg={{vpc}}
+
+  - name: Gather facts of VPC for Sommercamp
+    ec2_vpc_net_facts:
+      region: us-west-2
+      filters:
+        "tag:Person": Philipp
+    register: vpc_result
+
+
+
+  - debug: msg={{vpc_result}}
+
+  - name: Delete Sommercamp VPC
+    ec2_vpc_net:
+      region: us-west-2
+      name: "{{vpc_result.vpcs.0.tags.Name}}"
+      state: absent
+      cidr_block: "{{vpc_result.vpcs.0.cidr_block}}"
+    when: vpc_result.vpcs != []
+        
+    
