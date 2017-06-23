@@ -17,7 +17,7 @@
     region: "{{region}}"
     instance_name: "{{ application_name }}-rdb"
     db_engine: MySQL
-    size: 10
+    size: 5
     instance_type: db.t2.medium
     username: PetClinicDB
     password: PetClinicPassw0rd

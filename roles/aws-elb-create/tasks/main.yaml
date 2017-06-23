@@ -1,0 +1,10 @@
+# Check pre-requisites
+- include: gather_aws_facs.yaml
+
+- name: Create the application loadbalnacer
+  shell: "aws elbv2 create-load-balancer --region {{region}} --name {{application_name}}-elb --security-groups {{security_group_id}} --subnets {{ec2_asg_vpc_subnets | join(' ')}} "
+  register: elb_output
+
+- set_fact:
+     elb: "{{ elb_output.stdout | from_json }}"
+

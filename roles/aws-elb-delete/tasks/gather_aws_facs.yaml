@@ -14,7 +14,7 @@
   ec2_vpc_subnet_facts:
     filters:
       vpc-id: "{{vpc.id}}"
-      "tag:Usage": DB
+      "tag:Usage": ELB
     region: "{{region}}"
   register: subnetworks
   when: vpc is defined
@@ -29,7 +29,7 @@
     region: "{{region}}"
     filters:
       group-name:
-        - "{{application_name}}-sg-db"
+        - "{{application_name}}-sg-elb"
   register: security_group_result
 
 - name: Set informatiom from existing VPC

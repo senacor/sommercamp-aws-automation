@@ -1,0 +1,19 @@
+# Check pre-requisites
+- include: gather_aws_facs.yaml
+
+- name: gather facts about loablancer
+  shell: "aws elbv2 describe-load-balancers --region {{region}} --name {{application_name}}-elb "
+  register: elb_output
+  ignore_errors: yes
+
+- set_fact:
+     elb: "{{ elb_output.stdout | from_json }}"
+  when: elb_output is defined
+  ignore_errors: yes
+
+- name: Create the application loadbalnacer
+  shell: "aws elbv2 delete-load-balancer --region {{region}} --load-balancer-arn {{elb.LoadBalancers.0.LoadBalancerArn}} "
+  when: elb is defined
+
+
+
