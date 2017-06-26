@@ -10,5 +10,7 @@
     - aws-security-create
     - aws-cluster-create
     - aws-database-create
+    - aws-elb-create
+    #- aws-service-deploy
   vars:
     - region: us-west-2

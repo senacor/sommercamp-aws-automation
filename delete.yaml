@@ -6,6 +6,7 @@
   connection: local
   gather_facts: False
   roles:
+    - aws-elb-delete
     - aws-database-delete
     - aws-cluser-delete
     - aws-security-delete
