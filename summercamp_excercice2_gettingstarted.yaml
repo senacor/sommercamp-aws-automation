@@ -1,0 +1,119 @@
+- hosts: localhost
+  connection: local
+  gather_facts: False
+  vars:
+    aws_region: eu-central-1
+  tasks:
+
+  - name: Set VPC present
+    ec2_vpc_net:
+      name: summercamp_vpc_swr
+      cidr_block: 10.10.0.0/16
+      region: "{{aws_region}}"
+      tags:
+        CostCenter: "SummerCamp"
+        Person: "SWR"
+    register: vpc
+
+  - name: Debug present
+    debug: msg={{vpc}}
+
+  - name: Gather VPC facts
+    ec2_vpc_net_facts:
+      region: "{{aws_region}}"
+      filters:
+        "tag:Person": "SWR"
+    register: vpc_info
+
+  - name: Debug VPC facts
+    debug: msg={{vpc_info}}
+
+  - name: Setup security group
+    ec2_group:
+      name: summercamp_sg
+      description: summercamp_sg_desc
+      region: "{{aws_region}}"
+      vpc_id: "{{vpc_info.vpcs.0.id}}"
+      rules:
+        - proto: tcp
+          from_port: 22
+          to_port: 22
+          cidr_ip: 0.0.0.0/0
+
+  - name: Gather Security Group facts
+    ec2_group_facts:
+      region: "{{aws_region}}"
+      filters:
+       "group_name": "summercamp_sg"
+    register: vpc_sg_info
+
+  - name: Debug Security Group facts
+    debug: msg={{vpc_sg_info}}
+
+  - name: Setup VPC subnet
+    ec2_vpc_subnet:
+      vpc_id: "{{vpc_info.vpcs.0.id}}"
+      cidr: 10.10.0.0/24
+      region: "{{aws_region}}"
+      tags:
+        Name: summercamp_vpc_subnet
+        CostCenter: "SummerCamp"
+
+  - name: Gather VPC Subnet facts
+    ec2_vpc_subnet_facts:
+      region: "{{aws_region}}"
+      filters:
+       "tag:Name": "summercamp_vpc_subnet"
+    register: vpc_subnet_info
+
+  - name: Debug VPC Subnet facts
+    debug: msg={{vpc_subnet_info}}
+
+  - name: Setup Internet Gateway
+    ec2_vpc_igw:
+      region: "{{aws_region}}"
+      vpc_id: "{{vpc_info.vpcs.0.id}}"
+
+  # Basic creation example:
+  - name: Set up public subnet route table
+    ec2_vpc_route_table:
+      vpc_id: "{{vpc.id}}"
+      region: "{{region}}"
+      tags:
+        Name: "{{application_name}}-public-rt"
+        Type: "custom"
+      subnets:
+        - "{{application_name}}-nw-public-a"
+      routes:
+        - dest: "{{vpc_cidr_block}}"
+          gateway_id: "local"
+        - dest: 0.0.0.0/0
+          gateway_id: "{{ igw.gateway_id }}"
+    register: public_route_table
+
+  - name: Setup EC2
+    ec2:
+      region: "{{aws_region}}"
+      key_name: "summercamp_swr"
+      image: ami-344fe85b
+      instance_type: t2.micro
+      vpc_subnet_id: "{{vpc_subnet_info.subnets.0.id}}"
+      group_id: "{{vpc_sg_info.security_groups.0.group_id}}"
+      assign_public_ip: true
+      instance_tags:
+        Name: summercamp_ec2
+        CostCenter: "SummerCamp"
+
+#  - name: Set VPC absent
+#    ec2_vpc_net:
+#      name: "{{vpc_info.vpcs.0.tags.Name}}"
+#      cidr_block: "{{vpc_info.vpcs.0.cidr_block}}"
+#      region: "{{aws_region}}"
+#      state: absent
+#    when: vpc_info.vpcs != []
+
+
+
+
+
+
